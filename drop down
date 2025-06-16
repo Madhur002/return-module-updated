@@ -1,0 +1,253 @@
+// Custom dropdown component with search
+
+import React, { useRef, useState } from "react";
+
+// @mui material components
+import SearchIcon from "@mui/icons-material/Search";
+import Box from "@mui/material/Box";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
+import Fade from "@mui/material/Fade";
+import FormHelperText from "@mui/material/FormHelperText";
+import InputAdornment from "@mui/material/InputAdornment";
+import InputBase from "@mui/material/InputBase";
+import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
+import Typography from "@mui/material/Typography";
+
+export const SelectDropdown = ({
+  label,
+  placeholder,
+  options = [],
+  value,
+  onChange,
+  error,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const anchorRef = useRef(null);
+
+  // Ensure value is always a string to prevent .slice error
+  const safeValue = value || "";
+
+  const filteredOptions = options.filter((option) => {
+    const optionLabel = option.label || option.name || "";
+    return optionLabel.toLowerCase().includes(searchText.toLowerCase());
+  });
+
+  const handleToggle = () => {
+    setOpen((prevOpen) => !prevOpen);
+  };
+
+  const handleClose = (event) => {
+    if (anchorRef.current && anchorRef.current.contains(event.target)) {
+      return;
+    }
+    setOpen(false);
+  };
+
+  const handleOptionSelect = (optionName) => {
+    onChange({ target: { label, value: optionName } });
+    setOpen(false);
+    setSearchText("");
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchText(event.target.value);
+  };
+
+  // Get display text - find matching option or use value directly
+  const getDisplayText = () => {
+    if (!safeValue) return "";
+    
+    const selectedOption = options.find(option => 
+      (option.value || option.name || option.label) === safeValue ||
+      (option.label || option.name) === safeValue
+    );
+    
+    if (selectedOption) {
+      return selectedOption.label || selectedOption.name;
+    }
+    
+    return safeValue;
+  };
+
+  const displayText = getDisplayText();
+
+  return (
+    <Box sx={{ width: "100%" }}>
+      <Box
+        ref={anchorRef}
+        onClick={handleToggle}
+        sx={{
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: error ? "#ff0000" : (theme) => theme.palette.custom?.background1 || "#e0e0e0",
+          fontSize: "0.7rem",
+          height: "30px",
+          p: 1.5,
+          cursor: "pointer",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          minHeight: 24,
+          backgroundColor: "white",
+        }}
+      >
+        <Typography
+          sx={{
+            color: (theme) => theme.palette.custom?.text2 || "#666",
+            fontSize: "0.7rem",
+            opacity: displayText ? 1 : 0.5,
+          }}
+        >
+          {displayText ? displayText.slice(0, 20) : placeholder}
+        </Typography>
+        <Box
+          component="div"
+          sx={{
+            width: 0,
+            height: 0,
+            borderLeft: "5px solid transparent",
+            borderRight: "5px solid transparent",
+            borderTop: "5px solid #757575",
+            ml: 1,
+          }}
+        />
+      </Box>
+      {error && (
+        <FormHelperText error sx={{ ml: 1.5, mt: 0.5, fontSize: "0.6rem" }}>
+          {error}
+        </FormHelperText>
+      )}
+      <Popper
+        open={open}
+        anchorEl={anchorRef.current}
+        placement="bottom-start"
+        transition
+        disablePortal
+        style={{
+          width: anchorRef.current ? anchorRef.current.clientWidth : undefined,
+          zIndex: 1200,
+        }}
+      >
+        {({ TransitionProps }) => (
+          <Fade {...TransitionProps} timeout={200}>
+            <Paper
+              elevation={3}
+              sx={{
+                bgcolor: (theme) => theme.palette.custom?.paper || "white",
+                border: "none",
+                borderColor: (theme) => theme.palette.custom?.background1 || "#e0e0e0",
+                mt: 0.5,
+                maxHeight: 150,
+                borderRadius: 3,
+                minWidth: 300,
+                padding: 2,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Box
+                sx={{
+                  p: 0.2,
+                  px: 2,
+                  mb: 1,
+                  border: "2px solid",
+                  borderColor: (theme) => theme.palette.custom?.background1 || "#e0e0e0",
+                  backgroundColor: (theme) => theme.palette.custom?.background1 || "#f5f5f5",
+                  borderRadius: 2,
+                }}
+              >
+                <InputBase
+                  autoFocus
+                  placeholder="Search options..."
+                  value={searchText}
+                  onChange={handleSearchChange}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <SearchIcon
+                        fontSize="small"
+                        sx={{
+                          color: (theme) => theme.palette.custom?.text2 || "#666",
+                          fontSize: "1rem !important",
+                        }}
+                      />
+                    </InputAdornment>
+                  }
+                  fullWidth
+                  sx={{ fontSize: "0.7rem", color: (theme) => theme.palette.custom?.text2 || "#666" }}
+                />
+              </Box>
+              <Box
+                sx={{
+                  overflow: "auto",
+                  maxHeight: 250,
+                  "&::-webkit-scrollbar": { display: "none" },
+                  "msOverflowStyle": "none",
+                  "scrollbarWidth": "none",
+                }}
+              >
+                <ClickAwayListener onClickAway={handleClose}>
+                  <Box>
+                    {filteredOptions.length > 0 ? (
+                      filteredOptions.map((option) => {
+                        const optionLabel = option.label || option.name || "";
+                        const optionValue = option.value || option.name || option.label || "";
+                        const isSelected = safeValue === optionValue || safeValue === optionLabel;
+                        
+                        return (
+                          <Box
+                            key={option.id || option.value || optionLabel}
+                            onClick={() => handleOptionSelect(optionLabel)}
+                            sx={{
+                              px: 1.5,
+                              py: 0.5,
+                              gap: 1,
+                              display: "flex",
+                              flexDirection: "column",
+                              cursor: "pointer",
+                              mb: 1,
+                              borderRadius: 1,
+                              "&:hover": {
+                                backgroundColor: (theme) => theme.palette.custom?.background1 || "#f0f0f0",
+                                color: "#000000",
+                              },
+                              ...(isSelected && { 
+                                backgroundColor: (theme) => theme.palette.custom?.background1 || "#e3f2fd" 
+                              }),
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontSize: "0.7rem",
+                                color: (theme) => theme.palette.custom?.text2 || "#666",
+                              }}
+                            >
+                              {optionLabel}
+                            </Typography>
+                          </Box>
+                        );
+                      })
+                    ) : (
+                      <Box sx={{ p: 1.5, textAlign: "center" }}>
+                        <Typography
+                          sx={{ 
+                            fontSize: "0.7rem", 
+                            color: (theme) => theme.palette.custom?.text2 || "#666"
+                          }}
+                        >
+                          No results found
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </ClickAwayListener>
+              </Box>
+            </Paper>
+          </Fade>
+        )}
+      </Popper>
+    </Box>
+  );
+};
