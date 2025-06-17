@@ -1,0 +1,87 @@
+import React, { useRef, useState } from "react";
+import { Box, Typography, Popper, ClickAwayListener, Fade } from "@mui/material";
+import MonthYearPicker from "./MonthYearPicker";
+import { setYear } from "date-fns";
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import Accordion from '@mui/material/Accordion';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+const MonthYearDropdown = ({
+  selectedMonth,
+  selectedYear,
+  setSelectedMonth,
+  setYear,
+  onMonthChange,
+  onYearChange,
+}) => {
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef(null);
+  const handleToggle = () => setOpen((prev) => !prev);
+  const handleClose = (event) => {
+    if (anchorRef.current && anchorRef.current.contains(event.target)) return;
+    setOpen(false);
+  };
+  return (
+    <Box sx={{ width: "100%" }}>
+      <Accordion>
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel1-content"
+                id="panel1-header"
+              >
+                 <Typography sx={{ fontSize: "0.7rem" }}>
+                {selectedMonth !== undefined && selectedYear
+                  ? `${
+                      [
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                      ][selectedMonth]
+                    }${selectedYear}`
+                  : "Select Month-Year"}
+              </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box
+                  sx={{
+                    bgcolor: "white",
+                    border: "1px solid #ccc",
+                    borderRadius: 2,
+                    width: "100%",
+                    transform: "scale(1.1)",
+                    boxShadow: "0px 4px 20px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  <MonthYearPicker
+                    selectedMonth={selectedMonth}
+                    selectedYear={selectedYear}
+                    setSelectedMonth={(month) => {
+                      setSelectedMonth(month);
+                    }}
+                    setYear={(year) => {
+                      setYear(year);
+                    }}
+                    onMonthChange={(year, month) => {
+                      onMonthChange?.(year, month);
+                      setOpen(false);
+                    }}
+                    onYearChange={(year) => {
+                      onYearChange?.(year);
+                    }}
+                  />
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+    </Box>
+  );
+};
+export default MonthYearDropdown;
